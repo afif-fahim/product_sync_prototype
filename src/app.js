@@ -1,7 +1,8 @@
 import express from "express";
-import dotenv from 'dotenv';
-
-dotenv.config();
+import config from "./configs/index.js";
+import { sequelize } from "./configs/database.js";
+import Client from "./models/Client.js";
+import Product from "./models/Product.js";
 
 const app = express();
 
@@ -9,9 +10,13 @@ app.use(express.json());
 
 async function initializeApp() {
   try {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    await sequelize.authenticate();
+    console.log("Database connection established");
+    await sequelize.sync();
+    console.log('Database synchronized');
+
+    app.listen(config.port, () => {
+      console.log(`Server running on port ${config.port}`);
     });
   } catch (error) {
     console.error("Unable to start application:", error);
