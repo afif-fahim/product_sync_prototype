@@ -52,12 +52,12 @@ export default class ShopifyService {
     }
   }
 
-  normalizeProduct(product, websiteId) {
+  normalizeProduct(product, clientId) {
     const variant = product.node.variants.edges[0]?.node;
 
     return {
       externalId: product.node.id,
-      websiteId,
+      clientId,
       title: product.node.title,
       price: variant?.price,
       stock: variant?.inventoryQuantity,

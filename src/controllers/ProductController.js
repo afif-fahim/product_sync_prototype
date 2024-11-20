@@ -1,34 +1,61 @@
-import SyncService from "../services/SyncService.js";
+import Product from "../models/Product.js";
 import Client from "../models/Client.js";
+import SyncService from "../services/SyncService.js";
 
 export default class ProductController {
-  static async list(req, res) {
-    const clientId = req.params.clientId;
+  static async sync(req, res) {
+    const clientId = parseInt(req.params.clientId);
 
     try {
       const client = await Client.findByPk(clientId);
-      const service = SyncService.getServiceInstance(client);
-      let allProducts = [];
-
-      let hasNextPage = true;
-      let cursor = null;
-
-      while (hasNextPage) {
-        const result = await service.fetchProducts(cursor);
-        const products = result.data.products.edges.map((product) =>
-          service.normalizeProduct(product, client.id)
-        );
-
-        allProducts = allProducts.concat(products);
-
-        hasNextPage = result.data.products.pageInfo.hasNextPage;
-        cursor = result.data.products.pageInfo.endCursor;
+      if (!client) {
+        return res.status(404).json({
+          success: false,
+          error: "Client not found",
+        });
       }
+
+      const syncedCount = await SyncService.syncProducts(client);
+      res.json({
+        success: true,
+        productsSynced: syncedCount,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  static async list(req, res) {
+    const clientId = parseInt(req.params.clientId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    try {
+      const client = await Client.findByPk(clientId);
+      if (!client) {
+        return res.status(404).json({
+          success: false,
+          error: "Client not found",
+        });
+      }
+
+      const { count, rows } = await Product.findAndCountAll({
+        where: { client_id: clientId },
+        limit,
+        offset,
+      });
 
       res.json({
         success: true,
-        count: allProducts.length,
-        products: allProducts,
+        products: rows,
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
       });
     } catch (error) {
       res.status(500).json({
