@@ -5,6 +5,14 @@ import Client from "./Client.js";
 const Product = sequelize.define(
   "Product",
   {
+    clientId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: Client,
+        key: "id",
+      },
+    },
     externalId: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -25,10 +33,26 @@ const Product = sequelize.define(
   {
     timestamps: true,
     underscored: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["client_id", "external_id"],
+      },
+    ],
   }
 );
 
-Product.belongsTo(Client);
-Client.hasMany(Product);
+Product.belongsTo(Client, {
+  foreignKey: {
+    name: "clientId",
+    allowNull: false,
+  },
+});
+Client.hasMany(Product, {
+  foreignKey: {
+    name: "clientId",
+    allowNull: false,
+  },
+});
 
 export default Product;
