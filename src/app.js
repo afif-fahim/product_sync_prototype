@@ -2,8 +2,6 @@ import express from "express";
 import routes from "./routes/index.js";
 import config from "./configs/index.js";
 import { sequelize } from "./configs/database.js";
-import Client from "./models/Client.js";
-import Product from "./models/Product.js";
 
 const app = express();
 

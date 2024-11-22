@@ -34,7 +34,7 @@ export default class ShopifyService {
   async fetchProducts(cursor = null) {
     try {
       const response = await axios({
-        url: `https://${this.shopUrl}/admin/api/2024-01/graphql.json`,
+        url: `https://${this.shopUrl}/admin/api/2024-04/graphql.json`,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
