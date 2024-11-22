@@ -1,4 +1,5 @@
 import ShopifyService from "./ShopifyService.js";
+import WooCommerceService from "./WooCommerceService.js";
 import Product from "../models/Product.js";
 import { sequelize } from "../configs/database.js";
 
@@ -24,7 +25,21 @@ export default class SyncService {
         cursor = result.data.products.pageInfo.endCursor;
       }
     } else if (client.provider === "woocommerce") {
-      // TODO
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const result = await service.fetchProducts(page);
+        const products = result.data.map((product) =>
+          service.normalizeProduct(product, client.id)
+        );
+
+        await this.upsertProducts(products);
+        allProducts = allProducts.concat(products);
+
+        hasMore = result.hasMore;
+        page++;
+      }
     }
 
     return allProducts.length;
@@ -52,7 +67,11 @@ export default class SyncService {
     if (client.provider === "shopify") {
       return new ShopifyService(client.url, client.apiKey);
     } else if (client.provider === "woocommerce") {
-      // TODO
+      return new WooCommerceService(
+        client.url,
+        client.apiKey,
+        client.apiSecret
+      );
     }
     throw new Error("Unsupported provider");
   }
